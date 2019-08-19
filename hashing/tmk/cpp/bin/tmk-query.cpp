@@ -14,6 +14,9 @@
 
 using namespace facebook::tmk;
 using namespace facebook::tmk::algo;
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#include <utils/getline.h>
+#endif
 
 void handleListFileNameOrDie(
     const char* argv0,

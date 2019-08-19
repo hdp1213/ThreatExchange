@@ -1,6 +1,7 @@
 # ----------------------------------------------------------------
-CC=g++ -O2 -std=c++14 -I../..
-FFMPEG=/usr/local/bin/ffmpeg # please customize according to your installation
+CC=x86_64-w64-mingw32-g++ -O2 -std=c++14 -I../..
+C=x86_64-w64-mingw32-gcc -O2 -std=c99 -I../..
+FFMPEG=/usr/bin/ffmpeg # please customize according to your installation
 
 # ----------------------------------------------------------------
 LIBHDR= \
@@ -16,7 +17,9 @@ LIBHDR= \
 ./io/tmkiotypes.h \
 ./lib/vec.h \
 ./raster/rasterwriters.h \
-./raster/timeresamplers.h
+./raster/timeresamplers.h \
+./dll/dll_interface.h \
+../../utils/getline.h
 
 LIBSRC= \
 ../../pdq/cpp/downscaling/downscaling.cpp \
@@ -28,7 +31,8 @@ LIBSRC= \
 ./hashing/filehasher.cpp \
 ./io/tmkio.cpp \
 ./raster/rasterwriters.cpp \
-./raster/timeresamplers.cpp
+./raster/timeresamplers.cpp \
+./dll/dll_interface.cpp
 
 LIBOBJ= \
 ../../pdq/cpp/downscaling/downscaling.o \
@@ -40,22 +44,24 @@ LIBOBJ= \
 ./hashing/filehasher.o \
 ./io/tmkio.o \
 ./raster/rasterwriters.o \
-./raster/timeresamplers.o
+./raster/timeresamplers.o \
+./dll/dll_interface.o \
+../../utils/getline.o
 
 EXE= \
- tmk-hash-video \
- feat2tmk \
- vstr2feat \
- featdump \
- tmkdump \
- tmk-compare-two-tmks \
- tmk-show-pair-offsets \
- tmk-clusterize \
- tmk-query \
- tmk-two-level-score
+ tmk-hash-video.exe \
+ feat2tmk.exe \
+ vstr2feat.exe \
+ featdump.exe \
+ tmkdump.exe \
+ tmk-compare-two-tmks.exe \
+ tmk-show-pair-offsets.exe \
+ tmk-clusterize.exe \
+ tmk-query.exe \
+ tmk-two-level-score.exe
 
 # ================================================================
-all: $(EXE) regtest
+all: $(EXE)# regtest
 
 regtest: tmk-hash-video tmk-compare-two-tmks .always
 	mkdir -p ./regtest
@@ -97,6 +103,9 @@ regtest: tmk-hash-video tmk-compare-two-tmks .always
 libtmk.a: $(LIBOBJ)
 	ar r libtmk.a $(LIBOBJ)
 
+libtmk.dll: $(LIBOBJ)
+	$(CC) -shared -o $@ $^ -Wl,--out-implib,libtmkdll.a
+
 ../../pdq/cpp/downscaling/downscaling.o: ../../pdq/cpp/downscaling/downscaling.cpp $(LIBHDR)
 	$(CC) -c ../../pdq/cpp/downscaling/downscaling.cpp -o ../../pdq/cpp/downscaling/downscaling.o
 
@@ -127,33 +136,39 @@ libtmk.a: $(LIBOBJ)
 ./raster/timeresamplers.o: ./raster/timeresamplers.cpp $(LIBHDR)
 	$(CC) -c ./raster/timeresamplers.cpp -o ./raster/timeresamplers.o
 
+./dll/dll_interface.o: ./dll/dll_interface.cpp $(LIBHDR)
+	$(CC) -DTMK_EXPORTS -c ./dll/dll_interface.cpp -o $@
+
+../../utils/getline.o: ../../utils/getline.c ../../utils/getline.h
+	$(C) -c ../../utils/getline.c -o $@
+
 # ================================================================
-tmk-hash-video: ./bin/tmk-hash-video.cpp $(LIBHDR) libtmk.a
-	$(CC) bin/tmk-hash-video.cpp -o tmk-hash-video -L. -ltmk
+tmk-hash-video.exe: ./bin/tmk-hash-video.cpp $(LIBHDR) libtmk.a
+	$(CC) bin/tmk-hash-video.cpp -o $@ -L. -ltmk
 
 # ----------------------------------------------------------------
-vstr2feat: ./bin/vstr2feat.cpp $(LIBHDR) libtmk.a
-	$(CC) bin/vstr2feat.cpp -o vstr2feat -L. -ltmk
-feat2tmk: ./bin/feat2tmk.cpp $(LIBHDR) libtmk.a
-	$(CC) bin/feat2tmk.cpp -o feat2tmk -L. -ltmk
-featdump: ./bin/featdump.cpp $(LIBHDR) libtmk.a
-	$(CC) bin/featdump.cpp -o featdump -L. -ltmk
-tmkdump: ./bin/tmkdump.cpp $(LIBHDR) libtmk.a
-	$(CC) bin/tmkdump.cpp -o tmkdump -L. -ltmk
+vstr2feat.exe: ./bin/vstr2feat.cpp $(LIBHDR) libtmk.a
+	$(CC) bin/vstr2feat.cpp -o $@ -L. -ltmk
+feat2tmk.exe: ./bin/feat2tmk.cpp $(LIBHDR) libtmk.a
+	$(CC) bin/feat2tmk.cpp -o $@ -L. -ltmk
+featdump.exe: ./bin/featdump.cpp $(LIBHDR) libtmk.a
+	$(CC) bin/featdump.cpp -o $@ -L. -ltmk
+tmkdump.exe: ./bin/tmkdump.cpp $(LIBHDR) libtmk.a
+	$(CC) bin/tmkdump.cpp -o $@ -L. -ltmk
 
 # ----------------------------------------------------------------
-tmk-compare-two-tmks: ./bin/tmk-compare-two-tmks.cpp $(LIBHDR) libtmk.a
-	$(CC) bin/tmk-compare-two-tmks.cpp -o tmk-compare-two-tmks -L. -ltmk
-tmk-show-pair-offsets: ./bin/tmk-show-pair-offsets.cpp $(LIBHDR) libtmk.a
-	$(CC) bin/tmk-show-pair-offsets.cpp -o tmk-show-pair-offsets -L. -ltmk
+tmk-compare-two-tmks.exe: ./bin/tmk-compare-two-tmks.cpp $(LIBHDR) libtmk.a
+	$(CC) bin/tmk-compare-two-tmks.cpp -o $@ -L. -ltmk
+tmk-show-pair-offsets.exe: ./bin/tmk-show-pair-offsets.cpp $(LIBHDR) libtmk.a
+	$(CC) bin/tmk-show-pair-offsets.cpp -o $@ -L. -ltmk
 
 # ----------------------------------------------------------------
-tmk-clusterize: ./bin/tmk-clusterize.cpp $(LIBHDR) libtmk.a
-	$(CC) bin/tmk-clusterize.cpp -o tmk-clusterize -L. -ltmk
-tmk-query: ./bin/tmk-query.cpp $(LIBHDR) libtmk.a
-	$(CC) bin/tmk-query.cpp -o tmk-query -L. -ltmk
-tmk-two-level-score: ./bin/tmk-two-level-score.cpp $(LIBHDR) libtmk.a
-	$(CC) bin/tmk-two-level-score.cpp -o tmk-two-level-score -L. -ltmk
+tmk-clusterize.exe: ./bin/tmk-clusterize.cpp $(LIBHDR) libtmk.a
+	$(CC) bin/tmk-clusterize.cpp -o $@ -L. -ltmk
+tmk-query.exe: ./bin/tmk-query.cpp $(LIBHDR) libtmk.a
+	$(CC) bin/tmk-query.cpp -o $@ -L. -ltmk
+tmk-two-level-score.exe: ./bin/tmk-two-level-score.cpp $(LIBHDR) libtmk.a
+	$(CC) bin/tmk-two-level-score.cpp -o $@ -L. -ltmk
 
 # ================================================================
 tags:
@@ -161,11 +176,12 @@ tags:
 
 # ----------------------------------------------------------------
 clean:
-	-rm -vf tags
-	-rm -vf libtmk.a
-	-rm -vf $(LIBOBJ)
-	-rm -vf $(EXE)
-	-rm -vf regtest/*.tmk
+	@-rm -vf tags
+	@-rm -vf libtmk.a
+	@-rm -vf libtmkdll.a libtmk.dll
+	@-rm -vf $(LIBOBJ)
+	@-rm -vf $(EXE)
+	@-rm -vf regtest/*.tmk
 
 .always:
 	@true

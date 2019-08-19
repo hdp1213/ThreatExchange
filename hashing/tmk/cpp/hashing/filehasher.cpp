@@ -23,7 +23,7 @@ bool hashVideo(
     fprintf(stderr, "%s\n", ffmpegGeneratorCommand.c_str());
   }
 
-  FILE* inputFp = popen(ffmpegGeneratorCommand.c_str(), "r");
+  FILE* inputFp = popen(ffmpegGeneratorCommand.c_str(), "rb");
   if (inputFp == nullptr) {
     fprintf(stderr, "%s: ffmpeg to generate video stream failed\n", argv0);
     return false;

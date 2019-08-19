@@ -22,6 +22,9 @@
 #include <tmk/cpp/algo/tmkfv.h>
 #include <tmk/cpp/io/tmkio.h>
 #include <tmk/cpp/bin/tmk_default_thresholds.h>
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#include <utils/getline.h>
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>

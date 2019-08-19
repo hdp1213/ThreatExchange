@@ -18,6 +18,9 @@ export DYLD_LIBRARY_PATH=/usr/lib:/usr/local/lib:../../faiss
 
 #include <tmk/algo/tmkfv.h>
 #include <tmk/io/tmkio.h>
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+#include <utils/getline.h>
+#endif
 
 #include <IndexIVFPQ.h>
 #include <IndexFlat.h>

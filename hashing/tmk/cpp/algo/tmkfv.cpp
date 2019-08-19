@@ -9,7 +9,9 @@
 #include <tmk/cpp/algo/tmkfv.h>
 #include <tmk/cpp/lib/vec.h>
 
+#define _USE_MATH_DEFINES
 #include <cmath>
+#include <math.h>
 #include <stdexcept>
 
 namespace facebook {
