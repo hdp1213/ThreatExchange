@@ -1,12 +1,16 @@
 # ================================================================
-CC=g++ -g -std=c++11
-IFLAGS=-I../.. -I.
+CXX=x86_64-w64-mingw32-g++ -g -std=c++11
+CC=x86_64-w64-mingw32-gcc -g -std=c99
+AR=x86_64-w64-mingw32-ar
+IFLAGS=-I../.. -I. -I/usr/x86_64-w64-mingw32/include -I$(HOME)/mingw64/include
 # -Wno-char-subscripts is because of CImg.h
 WFLAGS=-Wall -Wno-char-subscripts -Werror
-LFLAGS=-lm
+LFLAGS=-lm -L/usr/x86_64-w64-mingw32/lib -L$(HOME)/mingw64/lib# -L. -lpdq
+CIMG=-Dcimg_use_png -Dcimg_use_jpeg -Dcimg_use_tiff -Dcimg_use_zlib -lpng -ljpeg -ltiff -lz
 
-CCOPT=$(CC) $(CFLAGS) $(IFLAGS) $(WFLAGS) -O3
-CCDBG=$(CC) -g $(CFLAGS) $(IFLAGS) $(WFLAGS)
+CCOPT=$(CXX) $(CFLAGS) $(IFLAGS) $(WFLAGS) -O3
+COPT=$(CC) $(CFLAGS) $(IFLAGS) $(WFLAGS) -O3
+CCDBG=$(CXX) -g $(CFLAGS) $(IFLAGS) $(WFLAGS)
 CCSAN=clang -fsanitize=address -g $(CFLAGS) $(IFLAGS) $(WFLAGS)
 
 # ================================================================
@@ -22,7 +26,9 @@ LIBHDRS=\
  io/pdqio.h \
  index/mih.h \
  hashing/torben.h \
- ./CImg.h
+ ./dll/dll_interface.h \
+ ./CImg.h \
+ ../../utils/getline.h
 
 LIBSRCS=\
  common/pdqhashtypes.cpp \
@@ -31,26 +37,38 @@ LIBSRCS=\
  hashing/pdqhashing.cpp \
  downscaling/downscaling.cpp \
  io/pdqio.cpp \
- hashing/torben.cpp
+ hashing/torben.cpp \
+ ./dll/dll_interface.cpp
+
+LIBOBJS=\
+ ./common/pdqhashtypes.o \
+ ./io/hashio.o \
+ ./common/pdqhamming.o \
+ ./hashing/pdqhashing.o \
+ ./downscaling/downscaling.o \
+ ./io/pdqio.o \
+ ./hashing/torben.o \
+ ./dll/dll_interface.o \
+ ../../utils/getline.o
 
 MAINS=\
- pdq-photo-hasher \
- test-mih \
- clusterize256 \
- snowball-clusterize256 \
- clusterize256x \
- mih-query \
- hashtool256 \
- pdq-downsample-demo \
- test-bits \
- hamming-tabulate \
- test-hamming
+ pdq-photo-hasher-new.exe
+#  test-mih \
+#  clusterize256 \
+#  snowball-clusterize256 \
+#  clusterize256x \
+#  mih-query \
+#  hashtool256 \
+#  pdq-downsample-demo \
+#  test-bits \
+#  hamming-tabulate \
+#  test-hamming
 
 TESTS=\
  run-test-bits run-test-hamming run-reg-test
 
 # ================================================================
-top: $(MAINS) $(TESTS)
+top: $(MAINS) # $(TESTS)
 
 run-test-bits: test-bits
 	./test-bits
@@ -61,21 +79,58 @@ run-reg-test:
 itso:
 	cp output-regtest/out reg_test/expected
 
+libpdq.a: $(LIBOBJS)
+	$(AR) r $@ $(LIBOBJS)
+
+libpdq.dll: $(LIBOBJS)
+	$(CXX) -shared -o $@ $(LIBOBJS) $(LFLAGS) $(CIMG) -Wl,--out-implib,libpdqdll.a
+
 # ================================================================
-hashtool256: bin/hashtool256.cpp $(LIBSRCS) $(LIBHDRS)
-	$(CCOPT) bin/hashtool256.cpp $(LIBSRCS) -o hashtool256 $(LFLAGS)
+./common/pdqhashtypes.o: ./common/pdqhashtypes.cpp $(LIBHDRS)
+	$(CCOPT) -c ./common/pdqhashtypes.cpp -o ./common/pdqhashtypes.o
 
-test-bits: bin/test-bits.cpp $(LIBSRCS) $(LIBHDRS)
-	$(CCOPT) bin/test-bits.cpp $(LIBSRCS) -o test-bits $(LFLAGS)
+./io/hashio.o: ./io/hashio.cpp $(LIBHDRS)
+	$(CCOPT) -c ./io/hashio.cpp -o ./io/hashio.o
 
-hamming-tabulate: bin/hamming-tabulate.cpp $(LIBSRCS) $(LIBHDRS)
-	$(CCOPT) bin/hamming-tabulate.cpp $(LIBSRCS) -o test-hamming $(LFLAGS)
+./common/pdqhamming.o: ./common/pdqhamming.cpp $(LIBHDRS)
+	$(CCOPT) -c ./common/pdqhamming.cpp -o ./common/pdqhamming.o
 
-test-hamming: bin/test-hamming.cpp $(LIBSRCS) $(LIBHDRS)
-	$(CCOPT) bin/test-hamming.cpp $(LIBSRCS) -o test-hamming $(LFLAGS)
+./hashing/pdqhashing.o: ./hashing/pdqhashing.cpp $(LIBHDRS)
+	$(CCOPT) -c ./hashing/pdqhashing.cpp -o ./hashing/pdqhashing.o
 
-pdq-photo-hasher: bin/pdq-photo-hasher.cpp $(LIBSRCS) $(LIBHDRS)
-	$(CCOPT) bin/pdq-photo-hasher.cpp $(LIBSRCS) -o pdq-photo-hasher $(LFLAGS)
+./downscaling/downscaling.o: ./downscaling/downscaling.cpp $(LIBHDRS)
+	$(CCOPT) -c ./downscaling/downscaling.cpp -o ./downscaling/downscaling.o
+
+./io/pdqio.o: ./io/pdqio.cpp $(LIBHDRS)
+	$(CCOPT) -c ./io/pdqio.cpp -o ./io/pdqio.o $(LFLAGS) $(CIMG)
+
+./hashing/torben.o: ./hashing/torben.cpp $(LIBHDRS)
+	$(CCOPT) -c ./hashing/torben.cpp -o ./hashing/torben.o
+
+./dll/dll_interface.o: ./dll/dll_interface.cpp $(LIBHDRS)
+	$(CCOPT) -DPDQ_EXPORTS -c ./dll/dll_interface.cpp -o ./dll/dll_interface.o
+
+../../utils/getline.o: ../../utils/getline.c ../../utils/getline.h
+	$(COPT) -c ../../utils/getline.c -o ../../utils/getline.o
+
+# ================================================================
+hashtool256: bin/hashtool256.cpp $(LIBHDRS) $(LIBOBJS) libpdq.a
+	$(CCOPT) bin/hashtool256.cpp -o hashtool256 $(LFLAGS)
+
+test-bits: bin/test-bits.cpp $(LIBHDRS) $(LIBOBJS) libpdq.a
+	$(CCOPT) bin/test-bits.cpp -o test-bits $(LFLAGS)
+
+hamming-tabulate: bin/hamming-tabulate.cpp $(LIBHDRS) $(LIBOBJS) libpdq.a
+	$(CCOPT) bin/hamming-tabulate.cpp -o test-hamming $(LFLAGS)
+
+test-hamming: bin/test-hamming.cpp $(LIBHDRS) $(LIBOBJS) libpdq.a
+	$(CCOPT) bin/test-hamming.cpp -o test-hamming $(LFLAGS)
+
+pdq-photo-hasher-new.exe: bin/pdq-photo-hasher.cpp $(LIBHDRS) libpdq.a
+	$(CCOPT) bin/pdq-photo-hasher.cpp -o $@ -L. -lpdq $(LFLAGS) $(CIMG)
+
+pdq-photo-hasher.exe: bin/pdq-photo-hasher.cpp $(LIBHDRS) $(LIBSRCS) ../../utils/getline.o
+	$(CCOPT) bin/pdq-photo-hasher.cpp $(LIBSRCS) ../../utils/getline.o -o $@ $(LFLAGS) $(CIMG)
 
 # Profile version. Usage:
 # * make pdq-photo-hasher-prof
@@ -124,5 +179,7 @@ tags: .always
 clean:
 	@-rm -vf $(MAINS) tags
 	@-rm -rvf *.dSYM
+	@-rm -vf libpdq.a libpdq.dll libpdqdll.a
+	@-rm -vf $(LIBOBJS)
 .always:
 	/usr/bin/true

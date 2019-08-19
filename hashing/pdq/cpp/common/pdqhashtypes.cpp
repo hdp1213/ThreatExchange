@@ -185,7 +185,7 @@ bool Hash256::operator==(const Hash256& that) const {
 Hash256 Hash256::fuzz(int numErrorBits) {
   Hash256 rv = *this;
   for (int i = 0; i < numErrorBits; i++) {
-    int idx = random() % 256;
+    int idx = rand() % 256;
     rv.flipBit(idx);
   }
   return rv;

@@ -7,9 +7,11 @@
 // https://github.com/facebookexternal/ThreatExchange-PDQ/blob/master/pdqhash-2017-10-09.pdf
 // ================================================================
 
+#define _USE_MATH_DEFINES
 #include <cassert>
 #include <chrono>
 #include <cmath>
+#include <math.h>
 
 using namespace std;
 
