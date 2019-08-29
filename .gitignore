@@ -14,3 +14,4 @@ hashing/pdq/java/bazel-java/
 hashing/pdq/java/bazel-out/
 hashing/pdq/java/bazel-testlogs/
 *.exe
+*.dll
