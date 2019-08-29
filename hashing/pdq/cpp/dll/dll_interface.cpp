@@ -15,7 +15,7 @@ bool PDQ_CALL PdqfHashFile(const char* inputFileName, char* fileHash, size_t fil
   const char* argv0 = "";
 
   try {
-    facebook::pdq::hashing::pdqHash256FromFile(
+    bool hashSuccess = facebook::pdq::hashing::pdqHash256FromFile(
       inputFileName,
       pdqhash,
       quality,
@@ -23,6 +23,9 @@ bool PDQ_CALL PdqfHashFile(const char* inputFileName, char* fileHash, size_t fil
       readSecondsUnused,
       hashSecondsUnused
     );
+    if (!hashSuccess) {
+      return false;
+    }
   } catch (std::runtime_error& e) {
     fprintf(stderr, "%s: could not decode \"%s\".\n", argv0, inputFileName);
     return false;
