@@ -64,8 +64,7 @@ float* loadFloatLumaFromCImg(CImg<uint8_t>& img, int& numRows, int& numCols) {
   } else {
     fprintf(stderr, "Internal coding error detected at file %s line %d.\n",
       __FILE__, __LINE__);
-    exit(1);
-    return nullptr; // not reached
+    return nullptr; // reached
   }
 }
 
@@ -107,6 +106,9 @@ bool pdqHash256FromFile(
   t1 = chrono::system_clock::now();
   int numRows, numCols;
   float* fullBuffer1 = loadFloatLumaFromCImg(input, numRows, numCols);
+  if (fullBuffer1 == nullptr) {
+    return false;
+  }
   float* fullBuffer2 = new float[numRows * numCols];
   float buffer64x64[64][64];
   float buffer16x64[16][64];
@@ -166,6 +168,9 @@ bool pdqDihedralHash256esFromFile(
   t1 = chrono::system_clock::now();
   int numRows, numCols;
   float* fullBuffer1 = loadFloatLumaFromCImg(input, numRows, numCols);
+  if (fullBuffer1 == nullptr) {
+    return false;
+  }
   float* fullBuffer2 = new float[numRows * numCols];
   float buffer64x64[64][64];
   float buffer16x64[16][64];
